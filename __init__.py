@@ -1,10 +1,10 @@
 bl_info = {
-    "name"        : "BrickSculpt",
+    "name"        : "BrickSculpt (Bricker Addon)",
     "author"      : "Christopher Gearhart <chris@bblanimation.com>",
     "version"     : (1, 0, 0),
     "blender"     : (2, 79, 0),
     "description" : "Brick Sculpting Tools for Bricker",
-    "location"    : "View3D > Tools > Bricker",
+    "location"    : "View3D > Tools > Bricker > Customize Model",
     "warning"     : "",  # used for warning icon and text in addons panel
     "wiki_url"    : "https://www.blendermarket.com/products/bricksculpt/",
     "tracker_url" : "https://github.com/bblanimation/bricksculpt/issues",
