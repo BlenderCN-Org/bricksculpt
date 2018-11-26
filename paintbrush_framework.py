@@ -49,8 +49,8 @@ def get_quadview_index(context, x, y):
     return (None, None)
 
 
-class paintbrushTools:
-    """ functionality from the paintbrush tool """
+class paintbrushFramework:
+    """ modal framework for the paintbrush tool """
 
     ################################################
     # Blender Operator methods
