@@ -57,12 +57,13 @@ class paintbrushFramework:
 
     def modal(self, context, event):
         try:
-            # commit changes on return key press
-            if event.type == "ESC" and event.value == "PRESS":
-                bpy.context.window.cursor_set("DEFAULT")
-                self.cancel(context)
-                self.undo_stack.undo_pop_clean()
-                return{"CANCELLED"}
+            # # commit changes on return key press
+            # if event.type == "ESC" and event.value == "PRESS":
+            #     bpy.context.window.cursor_set("DEFAULT")
+            #     self.cancel(context)
+            #     self.undo_stack.undo_pop_clean()
+            #     return{"CANCELLED"}
+
 
             # commit changes on return key press
             if event.type == "RET" and event.value == "PRESS":
@@ -75,6 +76,35 @@ class paintbrushFramework:
             if event.type == "Z" and (event.ctrl or event.oskey):
                 return {"RUNNING_MODAL"}
 
+            # check if function key pressed
+            if event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "PRESS":
+                if self.layerSolod:
+                    self.ctrlClickTime = time.time()
+                    self.possibleCtrlDisable = True
+                    return {"RUNNING_MODAL"}
+                else:
+                    self.layerSolod = True
+            # clear solo layer if escape/quick ctrl pressed
+            if (self.layerSolod and
+                (event.type == "ESC" and event.value == "PRESS") or
+                (event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "RELEASE" and time.time() - self.ctrlClickTime < 0.2)):
+                self.unSoloLayer()
+                self.layerSolod = False
+                self.possibleCtrlDisable = False
+                return {"RUNNING_MODAL"}
+            # if event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "PRESS":
+            #     if time.time() - self.ctrlClickTime < 0.5:
+            #         self.double_ctrl = True
+            #     else:
+            #         self.double_ctrl = False
+            #         self.ctrlClickTime = time.time()
+            # elif event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "RELEASE":
+            #     self. = True
+            # elif self.runUnSoloLayer and time.time() - self.ctrlClickTime > 0.2 and not self.double_ctrl:
+            #     self.unSoloLayer()
+            #     self.releaseTime = 0
+            #     self.runUnSoloLayer = False
+
             # check if left_click is pressed
             if event.type == "LEFTMOUSE" and event.value == "PRESS":
                 self.left_click = True
@@ -84,35 +114,47 @@ class paintbrushFramework:
                     return {"RUNNING_MODAL"}
             if event.type == "LEFTMOUSE" and event.value == "RELEASE":
                 self.left_click = False
+                self.releaseTime = time.time()
 
             # clear recentlyAddedBricks on mousemove when left_click not pressed
             if event.type == "MOUSEMOVE" and len(self.recentlyAddedBricks) > 0 and not self.left_click:
                 self.recentlyAddedBricks = []
 
             # cast ray to calculate mouse position and travel
-            if event.type in ['TIMER', 'MOUSEMOVE'] or self.left_click:
+            if event.type in ['TIMER', 'MOUSEMOVE', 'LEFT_CTRL', 'RIGHT_CTRL'] or self.left_click:
                 scn, cm, n = getActiveContextInfo()
                 self.mouse = Vector((event.mouse_region_x, event.mouse_region_y))
                 self.mouseTravel = abs(self.mouse.x - self.lastMouse.x) + abs(self.mouse.y - self.lastMouse.y)
                 self.hover_scene(context, self.mouse.x, self.mouse.y, cm.source_name, update_header=self.left_click)
                 # self.update_ui_mouse_pos()
-                if self.obj is None:
+                # run solo layer functionality
+                if event.ctrl and not self.left_click and not (self.possibleCtrlDisable and time.time() - self.ctrlClickTime < 0.2) and self.mouseTravel > 10 and time.time() > self.releaseTime + 0.75:
+                    if len(self.hiddenBricks) > 0:
+                        self.unSoloLayer()
+                        self.hover_scene(context, self.mouse.x, self.mouse.y, cm.source_name, update_header=self.left_click)
+                    if self.obj is not None:
+                        self.lastMouse = self.mouse
+                        curKey = getDictKey(self.obj.name)
+                        curLoc = getDictLoc(self.bricksDict, curKey)
+                        objSize = self.bricksDict[curKey]["size"]
+                        self.soloLayer(cm, curKey, curLoc, objSize)
+                elif self.obj is None:
                     bpy.context.window.cursor_set("DEFAULT")
-                    return {"PASS_THROUGH"}
+                    return {"RUNNING_MODAL"}
                 else:
                     bpy.context.window.cursor_set("PAINT_BRUSH")
 
             # draw/remove bricks on left_click & drag
             if self.left_click and (event.type == 'LEFTMOUSE' or (event.type == "MOUSEMOVE" and (not event.alt or self.mouseTravel > 5))):
-                self.lastMouse = self.mouse
                 # determine which action (if any) to run at current mouse position
                 addBrick = not (event.alt or self.obj.name in self.recentlyAddedBricks) and self.mode == "BRICK"
-                removeBrick = event.alt and self.mode == "BRICK"
+                removeBrick = event.alt and self.mode == "BRICK" and self.mouseTravel > 10
                 changeMaterial = self.obj.name not in self.addedBricks and self.mode == "MATERIAL"
                 splitBrick = self.mode == "SPLIT/MERGE" and (event.alt or event.shift)
                 mergeBrick = self.obj.name not in self.addedBricks and self.mode == "SPLIT/MERGE" and not event.alt
                 # get key/loc/size of brick at mouse position
                 if addBrick or removeBrick or changeMaterial or splitBrick or mergeBrick:
+                    self.lastMouse = self.mouse
                     curKey = getDictKey(self.obj.name)
                     curLoc = getDictLoc(self.bricksDict, curKey)
                     objSize = self.bricksDict[curKey]["size"]
@@ -146,7 +188,7 @@ class paintbrushFramework:
                 scn, cm, n = getActiveContextInfo()
                 self.mergeBrick(cm, state="RELEASE")
 
-            return {"PASS_THROUGH"}
+            return {"PASS_THROUGH" if event.type.startswith("NUMPAD") or event.type in ("TRACKPADZOOM", "TRACKPADPAN", "MOUSEMOVE", "NDOF_BUTTON_PANZOOM", "INBETWEEN_MOUSEMOVE", "MOUSEROTATE", "WHEELUPMOUSE", "WHEELDOWNMOUSE", "WHEELINMOUSE", "WHEELOUTMOUSE") else "RUNNING_MODAL"}
         except:
             bpy.context.window.cursor_set("DEFAULT")
             self.cancel(context)
