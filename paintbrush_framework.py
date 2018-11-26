@@ -57,16 +57,8 @@ class paintbrushFramework:
 
     def modal(self, context, event):
         try:
-            # # commit changes on return key press
-            # if event.type == "ESC" and event.value == "PRESS":
-            #     bpy.context.window.cursor_set("DEFAULT")
-            #     self.cancel(context)
-            #     self.undo_stack.undo_pop_clean()
-            #     return{"CANCELLED"}
-
-
-            # commit changes on return key press
-            if event.type == "RET" and event.value == "PRESS":
+            # commit changes on 'ret' key press
+            if (event.type == "RET" or (event.type == "ESC" and not self.layerSolod)) and event.value == "PRESS":
                 bpy.context.window.cursor_set("DEFAULT")
                 self.cancel(context)
                 self.commitChanges()
@@ -84,26 +76,17 @@ class paintbrushFramework:
                     return {"RUNNING_MODAL"}
                 else:
                     self.layerSolod = True
+            # if mouse moves, don't disable solo layer
+            if event.type == "MOUSEMOVE":
+                self.possibleCtrlDisable = False
             # clear solo layer if escape/quick ctrl pressed
             if (self.layerSolod and
                 (event.type == "ESC" and event.value == "PRESS") or
-                (event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "RELEASE" and time.time() - self.ctrlClickTime < 0.2)):
+                (event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "RELEASE" and (time.time() - self.ctrlClickTime < 0.2))):
                 self.unSoloLayer()
                 self.layerSolod = False
                 self.possibleCtrlDisable = False
                 return {"RUNNING_MODAL"}
-            # if event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "PRESS":
-            #     if time.time() - self.ctrlClickTime < 0.5:
-            #         self.double_ctrl = True
-            #     else:
-            #         self.double_ctrl = False
-            #         self.ctrlClickTime = time.time()
-            # elif event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "RELEASE":
-            #     self. = True
-            # elif self.runUnSoloLayer and time.time() - self.ctrlClickTime > 0.2 and not self.double_ctrl:
-            #     self.unSoloLayer()
-            #     self.releaseTime = 0
-            #     self.runUnSoloLayer = False
 
             # check if left_click is pressed
             if event.type == "LEFTMOUSE" and event.value == "PRESS":
@@ -128,7 +111,7 @@ class paintbrushFramework:
                 self.hover_scene(context, self.mouse.x, self.mouse.y, cm.source_name, update_header=self.left_click)
                 # self.update_ui_mouse_pos()
                 # run solo layer functionality
-                if event.ctrl and not self.left_click and not (self.possibleCtrlDisable and time.time() - self.ctrlClickTime < 0.2) and self.mouseTravel > 10 and time.time() > self.releaseTime + 0.75:
+                if event.ctrl and (not self.left_click or event.type in ["LEFT_CTRL", "RIGHT_CTRL"]) and not (self.possibleCtrlDisable and time.time() - self.ctrlClickTime < 0.2) and self.mouseTravel > 10 and time.time() > self.releaseTime + 0.75:
                     if len(self.hiddenBricks) > 0:
                         self.unSoloLayer()
                         self.hover_scene(context, self.mouse.x, self.mouse.y, cm.source_name, update_header=self.left_click)
@@ -188,7 +171,7 @@ class paintbrushFramework:
                 scn, cm, n = getActiveContextInfo()
                 self.mergeBrick(cm, state="RELEASE")
 
-            return {"PASS_THROUGH" if event.type.startswith("NUMPAD") or event.type in ("TRACKPADZOOM", "TRACKPADPAN", "MOUSEMOVE", "NDOF_BUTTON_PANZOOM", "INBETWEEN_MOUSEMOVE", "MOUSEROTATE", "WHEELUPMOUSE", "WHEELDOWNMOUSE", "WHEELINMOUSE", "WHEELOUTMOUSE") else "RUNNING_MODAL"}
+            return {"PASS_THROUGH" if event.type.startswith("NUMPAD") or event.type in ("Z", "TRACKPADZOOM", "TRACKPADPAN", "MOUSEMOVE", "NDOF_BUTTON_PANZOOM", "INBETWEEN_MOUSEMOVE", "MOUSEROTATE", "WHEELUPMOUSE", "WHEELDOWNMOUSE", "WHEELINMOUSE", "WHEELOUTMOUSE") else "RUNNING_MODAL"}
         except:
             bpy.context.window.cursor_set("DEFAULT")
             self.cancel(context)
