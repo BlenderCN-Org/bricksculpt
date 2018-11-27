@@ -68,6 +68,15 @@ class paintbrushFramework:
             if event.type == "Z" and (event.ctrl or event.oskey):
                 return {"RUNNING_MODAL"}
 
+            # switch mode
+            if not self.left_click and event.value == "PRESS":
+                if event.type == "D":
+                    self.mode = "DRAW"
+                elif event.type == "P":
+                    self.mode = "PAINT"
+                elif event.type == "M":
+                    self.mode = "MERGE/SPLIT"
+
             # check if function key pressed
             if event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "PRESS":
                 if self.layerSolod:
@@ -89,19 +98,18 @@ class paintbrushFramework:
                 return {"RUNNING_MODAL"}
 
             # check if left_click is pressed
-            if event.type == "LEFTMOUSE" and event.value == "PRESS":
-                self.left_click = True
-                # block left_click if not in 3D viewport
-                space, i = get_quadview_index(context, event.mouse_x, event.mouse_y)
-                if space is None:
-                    return {"RUNNING_MODAL"}
-            if event.type == "LEFTMOUSE" and event.value == "RELEASE":
-                self.left_click = False
-                self.releaseTime = time.time()
-
-            # clear recentlyAddedBricks on mousemove when left_click not pressed
-            if event.type == "MOUSEMOVE" and len(self.recentlyAddedBricks) > 0 and not self.left_click:
-                self.recentlyAddedBricks = []
+            if event.type == "LEFTMOUSE":
+                if event.value == "PRESS":
+                    self.left_click = True
+                    # block left_click if not in 3D viewport
+                    space, i = get_quadview_index(context, event.mouse_x, event.mouse_y)
+                    if space is None:
+                        return {"RUNNING_MODAL"}
+                elif event.value == "RELEASE":
+                    self.left_click = False
+                    self.releaseTime = time.time()
+                    # clear bricks added from delete's auto update
+                    self.addedBricksFromDelete = []
 
             # cast ray to calculate mouse position and travel
             if event.type in ['TIMER', 'MOUSEMOVE', 'LEFT_CTRL', 'RIGHT_CTRL'] or self.left_click:
@@ -130,11 +138,11 @@ class paintbrushFramework:
             # draw/remove bricks on left_click & drag
             if self.left_click and (event.type == 'LEFTMOUSE' or (event.type == "MOUSEMOVE" and (not event.alt or self.mouseTravel > 5))):
                 # determine which action (if any) to run at current mouse position
-                addBrick = not (event.alt or self.obj.name in self.recentlyAddedBricks) and self.mode == "BRICK"
-                removeBrick = event.alt and self.mode == "BRICK" and self.mouseTravel > 10
-                changeMaterial = self.obj.name not in self.addedBricks and self.mode == "MATERIAL"
-                splitBrick = self.mode == "SPLIT/MERGE" and (event.alt or event.shift)
-                mergeBrick = self.obj.name not in self.addedBricks and self.mode == "SPLIT/MERGE" and not event.alt
+                addBrick = not (event.alt or self.obj.name in self.keysToMergeOnRelease) and self.mode == "DRAW"
+                removeBrick = self.mode == "DRAW" and (event.alt or event.shift) and self.mouseTravel > 10
+                changeMaterial = self.obj.name not in self.addedBricks and self.mode == "PAINT"
+                splitBrick = self.mode == "MERGE/SPLIT" and (event.alt or event.shift)
+                mergeBrick = self.obj.name not in self.addedBricks and self.mode == "MERGE/SPLIT" and not event.alt
                 # get key/loc/size of brick at mouse position
                 if addBrick or removeBrick or changeMaterial or splitBrick or mergeBrick:
                     self.lastMouse = self.mouse
@@ -142,7 +150,7 @@ class paintbrushFramework:
                     curLoc = getDictLoc(self.bricksDict, curKey)
                     objSize = self.bricksDict[curKey]["size"]
                 # add brick next to existing brick
-                if addBrick and self.bricksDict[curKey]["name"] not in self.recentlyAddedBricks:
+                if addBrick and curKey not in self.keysToMergeOnRelease:
                     self.addBrick(cm, curKey, curLoc, objSize)
                 # remove existing brick
                 elif removeBrick:
@@ -158,16 +166,12 @@ class paintbrushFramework:
                     self.mergeBrick(cm, curKey, curLoc, objSize, state="DRAG")
                 return {"RUNNING_MODAL"}
 
-            # clear bricks added from delete's auto update
-            if event.type == "LEFTMOUSE" and event.value == "RELEASE" and self.mode == "BRICK":
-                self.addedBricksFromDelete = []
-
             # clean up after splitting bricks
-            if event.type in ["LEFT_ALT", "RIGHT_ALT", "LEFT_SHIFT", "RIGHT_SHIFT"] and event.value == "RELEASE" and self.mode == "SPLIT/MERGE":
+            if event.type in ["LEFT_ALT", "RIGHT_ALT", "LEFT_SHIFT", "RIGHT_SHIFT"] and event.value == "RELEASE" and self.mode == "MERGE/SPLIT":
                 deselectAll()
 
             # merge bricks in 'self.keysToMerge'
-            if event.type == "LEFTMOUSE" and event.value == "RELEASE" and self.mode == "SPLIT/MERGE" and not (event.alt or event.shift):
+            if event.type == "LEFTMOUSE" and event.value == "RELEASE" and self.mode in ["DRAW", "MERGE/SPLIT"]:
                 scn, cm, n = getActiveContextInfo()
                 self.mergeBrick(cm, state="RELEASE")
 
