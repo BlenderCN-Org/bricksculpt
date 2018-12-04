@@ -1,23 +1,19 @@
-"""
-    Copyright (C) 2018 Bricks Brought to Life
-    http://bblanimation.com/
-    chris@bblanimation.com
-
-    Created by Christopher Gearhart
-
-        This program is free software: you can redistribute it and/or modify
-        it under the terms of the GNU General Public License as published by
-        the Free Software Foundation, either version 3 of the License, or
-        (at your option) any later version.
-
-        This program is distributed in the hope that it will be useful,
-        but WITHOUT ANY WARRANTY; without even the implied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-        GNU General Public License for more details.
-
-        You should have received a copy of the GNU General Public License
-        along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    """
+# Copyright (C) 2018 Christopher Gearhart
+# chris@bblanimation.com
+# http://bblanimation.com/
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # System imports
 # NONE!
@@ -27,8 +23,7 @@ import bpy
 from bpy_extras.view3d_utils import region_2d_to_origin_3d, region_2d_to_vector_3d
 
 # Addon imports
-from ..undo_stack import *
-from ....lib.bricksDict.functions import getDictKey
+from ....lib.bricksDict.functions import *
 
 
 def get_quadview_index(context, x, y):
@@ -78,7 +73,7 @@ class paintbrushFramework:
                     self.mode = "MERGE/SPLIT"
 
             # check if function key pressed
-            if event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "PRESS":
+            if event.type in ("LEFT_CTRL", "RIGHT_CTRL") and event.value == "PRESS":
                 if self.layerSolod:
                     self.ctrlClickTime = time.time()
                     self.possibleCtrlDisable = True
@@ -90,8 +85,8 @@ class paintbrushFramework:
                 self.possibleCtrlDisable = False
             # clear solo layer if escape/quick ctrl pressed
             if (self.layerSolod and
-                (event.type == "ESC" and event.value == "PRESS") or
-                (event.type in ["LEFT_CTRL", "RIGHT_CTRL"] and event.value == "RELEASE" and (time.time() - self.ctrlClickTime < 0.2))):
+                ((event.type == "ESC" and event.value == "PRESS") or
+                 (event.type in ("LEFT_CTRL", "RIGHT_CTRL") and event.value == "RELEASE" and (time.time() - self.ctrlClickTime < 0.2)))):
                 self.unSoloLayer()
                 self.layerSolod = False
                 self.possibleCtrlDisable = False
@@ -112,14 +107,14 @@ class paintbrushFramework:
                     self.addedBricksFromDelete = []
 
             # cast ray to calculate mouse position and travel
-            if event.type in ['TIMER', 'MOUSEMOVE', 'LEFT_CTRL', 'RIGHT_CTRL'] or self.left_click:
+            if event.type in ('MOUSEMOVE', 'LEFT_CTRL', 'RIGHT_CTRL') or self.left_click:
                 scn, cm, n = getActiveContextInfo()
                 self.mouse = Vector((event.mouse_region_x, event.mouse_region_y))
                 self.mouseTravel = abs(self.mouse.x - self.lastMouse.x) + abs(self.mouse.y - self.lastMouse.y)
                 self.hover_scene(context, self.mouse.x, self.mouse.y, cm.source_name, update_header=self.left_click)
                 # self.update_ui_mouse_pos()
                 # run solo layer functionality
-                if event.ctrl and (not self.left_click or event.type in ["LEFT_CTRL", "RIGHT_CTRL"]) and not (self.possibleCtrlDisable and time.time() - self.ctrlClickTime < 0.2) and self.mouseTravel > 10 and time.time() > self.releaseTime + 0.75:
+                if event.ctrl and (not self.left_click or event.type in ("LEFT_CTRL", "RIGHT_CTRL")) and not (self.possibleCtrlDisable and time.time() - self.ctrlClickTime < 0.2) and self.mouseTravel > 10 and time.time() > self.releaseTime + 0.75:
                     if len(self.hiddenBricks) > 0:
                         self.unSoloLayer()
                         self.hover_scene(context, self.mouse.x, self.mouse.y, cm.source_name, update_header=self.left_click)
@@ -150,7 +145,7 @@ class paintbrushFramework:
                     curLoc = getDictLoc(self.bricksDict, curKey)
                     objSize = self.bricksDict[curKey]["size"]
                 # add brick next to existing brick
-                if addBrick and curKey not in self.keysToMergeOnRelease:
+                if addBrick and self.bricksDict[curKey]["name"] not in self.addedBricks:
                     self.addBrick(cm, curKey, curLoc, objSize)
                 # remove existing brick
                 elif removeBrick:
@@ -163,17 +158,17 @@ class paintbrushFramework:
                     self.splitBrick(cm, event, curKey, curLoc, objSize)
                 # add current brick to 'self.keysToMerge'
                 elif mergeBrick:
-                    self.mergeBrick(cm, curKey, curLoc, objSize, state="DRAG")
+                    self.mergeBrick(cm, curKey, curLoc, objSize, mode=self.mode, state="DRAG")
                 return {"RUNNING_MODAL"}
 
             # clean up after splitting bricks
-            if event.type in ["LEFT_ALT", "RIGHT_ALT", "LEFT_SHIFT", "RIGHT_SHIFT"] and event.value == "RELEASE" and self.mode == "MERGE/SPLIT":
+            if event.type in ("LEFT_ALT", "RIGHT_ALT", "LEFT_SHIFT", "RIGHT_SHIFT") and event.value == "RELEASE" and self.mode == "MERGE/SPLIT":
                 deselectAll()
 
             # merge bricks in 'self.keysToMerge'
-            if event.type == "LEFTMOUSE" and event.value == "RELEASE" and self.mode in ["DRAW", "MERGE/SPLIT"]:
+            if event.type == "LEFTMOUSE" and event.value == "RELEASE" and self.mode in ("DRAW", "MERGE/SPLIT"):
                 scn, cm, n = getActiveContextInfo()
-                self.mergeBrick(cm, state="RELEASE")
+                self.mergeBrick(cm, mode=self.mode, state="RELEASE")
 
             return {"PASS_THROUGH" if event.type.startswith("NUMPAD") or event.type in ("Z", "TRACKPADZOOM", "TRACKPADPAN", "MOUSEMOVE", "NDOF_BUTTON_PANZOOM", "INBETWEEN_MOUSEMOVE", "MOUSEROTATE", "WHEELUPMOUSE", "WHEELDOWNMOUSE", "WHEELINMOUSE", "WHEELOUTMOUSE") else "RUNNING_MODAL"}
         except:
@@ -219,10 +214,8 @@ class paintbrushFramework:
             context.area.header_text_set()
 
     def cancel(self, context):
-        wm = context.window_manager
-        wm.event_timer_remove(self._timer)
         context.area.header_text_set()
-        bpy.props.running_paintbrush = False
+        bpy.props.running_bricksculpt_tool = False
         self.ui_end()
 
     ##########################
