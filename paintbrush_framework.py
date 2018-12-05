@@ -211,10 +211,10 @@ class paintbrushFramework:
             self.obj = None
             self.loc = None
             self.normal = None
-            context.area.header_text_set()
+            context.area.header_text_set(text=None)
 
     def cancel(self, context):
-        context.area.header_text_set()
+        context.area.header_text_set(text=None)
         bpy.props.running_bricksculpt_tool = False
         self.ui_end()
 

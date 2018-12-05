@@ -19,7 +19,7 @@ bl_info = {
     "name"        : "BrickSculpt (Bricker Addon)",
     "author"      : "Christopher Gearhart <chris@bblanimation.com>",
     "version"     : (1, 0, 0),
-    "blender"     : (2, 79, 0),
+    "blender"     : (2, 80, 0),
     "description" : "Brick Sculpting Tools for Bricker",
     "location"    : "View3D > Tools > Bricker > Customize Model",
     "warning"     : "",  # used for warning icon and text in addons panel
@@ -40,9 +40,14 @@ from bpy.props import *
 # updater import
 from . import addon_updater_ops
 
+classes = [
+    BRICKSCULPT_PT_preferences,
+]
+
 
 def register():
-    bpy.utils.register_module(__name__)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
     bpy.props.bricksculpt_module_name = __name__
     bpy.props.bricksculpt_version = str(bl_info["version"])[1:-1].replace(", ", ".")
