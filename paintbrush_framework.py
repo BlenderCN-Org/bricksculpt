@@ -111,13 +111,13 @@ class paintbrushFramework:
                 scn, cm, n = getActiveContextInfo()
                 self.mouse = Vector((event.mouse_region_x, event.mouse_region_y))
                 self.mouseTravel = abs(self.mouse.x - self.lastMouse.x) + abs(self.mouse.y - self.lastMouse.y)
-                self.hover_scene(context, self.mouse.x, self.mouse.y, cm.source_name, update_header=self.left_click)
+                self.hover_scene(context, self.mouse.x, self.mouse.y, n, update_header=self.left_click)
                 # self.update_ui_mouse_pos()
                 # run solo layer functionality
                 if event.ctrl and (not self.left_click or event.type in ("LEFT_CTRL", "RIGHT_CTRL")) and not (self.possibleCtrlDisable and time.time() - self.ctrlClickTime < 0.2) and self.mouseTravel > 10 and time.time() > self.releaseTime + 0.75:
                     if len(self.hiddenBricks) > 0:
                         self.unSoloLayer()
-                        self.hover_scene(context, self.mouse.x, self.mouse.y, cm.source_name, update_header=self.left_click)
+                        self.hover_scene(context, self.mouse.x, self.mouse.y, n, update_header=self.left_click)
                     if self.obj is not None:
                         self.lastMouse = self.mouse
                         curKey = getDictKey(self.obj.name)
