@@ -192,6 +192,8 @@ class paintbrushFramework:
         scn = context.scene
         self.region = context.region
         self.r3d = context.space_data.region_3d
+        # TODO: Use custom view layer with only current model instead
+        view_layer = scn.view_layers[0]
         rv3d = context.region_data
         if rv3d is None:
             return None
@@ -201,7 +203,7 @@ class paintbrushFramework:
         ray_origin = region_2d_to_origin_3d(self.region, rv3d, coord)
         ray_target = ray_origin + (view_vector * ray_max)
 
-        result, loc, normal, idx, obj, mx = scn.ray_cast(ray_origin, ray_target)
+        result, loc, normal, idx, obj, mx = scn.ray_cast(view_layer, ray_origin, ray_target)
 
         if result and obj.name.startswith('Bricker_' + source_name):
             self.obj = obj
