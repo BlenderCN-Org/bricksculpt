@@ -133,7 +133,7 @@ class paintbrushFramework:
             # draw/remove bricks on left_click & drag
             if self.left_click and (event.type == 'LEFTMOUSE' or (event.type == "MOUSEMOVE" and (not event.alt or self.mouseTravel > 5))):
                 # determine which action (if any) to run at current mouse position
-                addBrick = not (event.alt or self.obj.name in self.keysToMergeOnRelease) and self.mode == "DRAW"
+                addBrick = not (event.alt or event.shift or self.obj.name in self.keysToMergeOnRelease) and self.mode == "DRAW"
                 removeBrick = self.mode == "DRAW" and (event.alt or event.shift) and self.mouseTravel > 10
                 changeMaterial = self.obj.name not in self.addedBricks and self.mode == "PAINT"
                 splitBrick = self.mode == "MERGE/SPLIT" and (event.alt or event.shift)
