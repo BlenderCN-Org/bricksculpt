@@ -65,12 +65,17 @@ class paintbrushFramework:
 
             # switch mode
             if not self.left_click and event.value == "PRESS":
-                if event.type == "D":
+                if event.type == "D" and self.mode != "DRAW":
                     self.mode = "DRAW"
-                elif event.type == "P":
-                    self.mode = "PAINT"
-                elif event.type == "M":
+                    self.addedBricks = []
+                    tag_redraw_areas("VIEW_3D")
+                elif event.type == "S" and self.mode != "MERGE/SPLIT":
                     self.mode = "MERGE/SPLIT"
+                    self.addedBricks = []
+                    tag_redraw_areas("VIEW_3D")
+                elif event.type == "M" and self.mode != "PAINT":
+                    self.mode = "PAINT"
+                    tag_redraw_areas("VIEW_3D")
 
             # check if function key pressed
             if event.type in ("LEFT_CTRL", "RIGHT_CTRL") and event.value == "PRESS":
@@ -111,13 +116,13 @@ class paintbrushFramework:
                 scn, cm, n = getActiveContextInfo()
                 self.mouse = Vector((event.mouse_region_x, event.mouse_region_y))
                 self.mouseTravel = abs(self.mouse.x - self.lastMouse.x) + abs(self.mouse.y - self.lastMouse.y)
-                self.hover_scene(context, self.mouse.x, self.mouse.y, cm.source_name, update_header=self.left_click)
+                self.hover_scene(context, self.mouse.x, self.mouse.y, n, update_header=self.left_click)
                 # self.update_ui_mouse_pos()
                 # run solo layer functionality
                 if event.ctrl and (not self.left_click or event.type in ("LEFT_CTRL", "RIGHT_CTRL")) and not (self.possibleCtrlDisable and time.time() - self.ctrlClickTime < 0.2) and self.mouseTravel > 10 and time.time() > self.releaseTime + 0.75:
                     if len(self.hiddenBricks) > 0:
                         self.unSoloLayer()
-                        self.hover_scene(context, self.mouse.x, self.mouse.y, cm.source_name, update_header=self.left_click)
+                        self.hover_scene(context, self.mouse.x, self.mouse.y, n, update_header=self.left_click)
                     if self.obj is not None:
                         self.lastMouse = self.mouse
                         curKey = getDictKey(self.obj.name)
@@ -133,7 +138,7 @@ class paintbrushFramework:
             # draw/remove bricks on left_click & drag
             if self.left_click and (event.type == 'LEFTMOUSE' or (event.type == "MOUSEMOVE" and (not event.alt or self.mouseTravel > 5))):
                 # determine which action (if any) to run at current mouse position
-                addBrick = not (event.alt or self.obj.name in self.keysToMergeOnRelease) and self.mode == "DRAW"
+                addBrick = not (event.alt or event.shift or self.obj.name in self.keysToMergeOnRelease) and self.mode == "DRAW"
                 removeBrick = self.mode == "DRAW" and (event.alt or event.shift) and self.mouseTravel > 10
                 changeMaterial = self.obj.name not in self.addedBricks and self.mode == "PAINT"
                 splitBrick = self.mode == "MERGE/SPLIT" and (event.alt or event.shift)
