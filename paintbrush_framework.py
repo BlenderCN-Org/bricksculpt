@@ -65,12 +65,17 @@ class paintbrushFramework:
 
             # switch mode
             if not self.left_click and event.value == "PRESS":
-                if event.type == "D":
+                if event.type == "D" and self.mode != "DRAW":
                     self.mode = "DRAW"
-                elif event.type == "P":
-                    self.mode = "PAINT"
-                elif event.type == "M":
+                    self.addedBricks = []
+                    tag_redraw_areas("VIEW_3D")
+                elif event.type == "S" and self.mode != "MERGE/SPLIT":
                     self.mode = "MERGE/SPLIT"
+                    self.addedBricks = []
+                    tag_redraw_areas("VIEW_3D")
+                elif event.type == "M" and self.mode != "PAINT":
+                    self.mode = "PAINT"
+                    tag_redraw_areas("VIEW_3D")
 
             # check if function key pressed
             if event.type in ("LEFT_CTRL", "RIGHT_CTRL") and event.value == "PRESS":
