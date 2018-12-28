@@ -39,6 +39,7 @@ from bpy.props import *
 
 # updater import
 from . import addon_updater_ops
+from .lib.preferences import *
 
 classes = [
     BRICKSCULPT_PT_preferences,
@@ -51,7 +52,7 @@ def register():
 
     bpy.props.bricksculpt_module_name = __name__
     bpy.props.bricksculpt_version = str(bl_info["version"])[1:-1].replace(", ", ".")
-    bpy.props.bricksculpt_preferences = bpy.context.user_preferences.addons[__package__].preferences
+    bpy.props.bricksculpt_preferences = bpy.context.preferences.addons[__package__].preferences
 
     # addon updater code and configurations
     addon_updater_ops.register(bl_info)
