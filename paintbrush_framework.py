@@ -151,7 +151,7 @@ class paintbrushFramework:
                     objSize = self.bricksDict[curKey]["size"]
                 # add brick next to existing brick
                 if addBrick and self.bricksDict[curKey]["name"] not in self.addedBricks:
-                    self.addBrick(cm, curKey, curLoc, objSize)
+                    self.addBrick(cm, n, curKey, curLoc, objSize)
                 # remove existing brick
                 elif removeBrick:
                     self.removeBrick(cm, n, event, curKey, curLoc, objSize)
@@ -163,7 +163,7 @@ class paintbrushFramework:
                     self.splitBrick(cm, event, curKey, curLoc, objSize)
                 # add current brick to 'self.keysToMerge'
                 elif mergeBrick:
-                    self.mergeBrick(cm, curKey, curLoc, objSize, mode=self.mode, state="DRAG")
+                    self.mergeBrick(cm, n, curKey, curLoc, objSize, mode=self.mode, state="DRAG")
                 return {"RUNNING_MODAL"}
 
             # clean up after splitting bricks
@@ -173,7 +173,7 @@ class paintbrushFramework:
             # merge bricks in 'self.keysToMerge'
             if event.type == "LEFTMOUSE" and event.value == "RELEASE" and self.mode in ("DRAW", "MERGE/SPLIT"):
                 scn, cm, n = getActiveContextInfo()
-                self.mergeBrick(cm, mode=self.mode, state="RELEASE")
+                self.mergeBrick(cm, n, mode=self.mode, state="RELEASE")
 
             return {"PASS_THROUGH" if event.type.startswith("NUMPAD") or event.type in ("Z", "TRACKPADZOOM", "TRACKPADPAN", "MOUSEMOVE", "NDOF_BUTTON_PANZOOM", "INBETWEEN_MOUSEMOVE", "MOUSEROTATE", "WHEELUPMOUSE", "WHEELDOWNMOUSE", "WHEELINMOUSE", "WHEELOUTMOUSE") else "RUNNING_MODAL"}
         except:
