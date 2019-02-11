@@ -44,7 +44,7 @@ def get_quadview_index(context, x, y):
     return (None, None)
 
 
-class paintbrushFramework:
+class bricksculpt_framework:
     """ modal framework for the paintbrush tool """
 
     ################################################
@@ -53,7 +53,7 @@ class paintbrushFramework:
     def modal(self, context, event):
         try:
             # commit changes on 'ret' key press
-            if (event.type == "RET" or (event.type == "ESC" and not self.layerSolod)) and event.value == "PRESS":
+            if (event.type == "RET" or (event.type == "ESC" and self.layerSolod is None)) and event.value == "PRESS":
                 bpy.context.window.cursor_set("DEFAULT")
                 self.cancel(context)
                 self.commitChanges()
@@ -69,31 +69,31 @@ class paintbrushFramework:
                     self.mode = "DRAW"
                     self.addedBricks = []
                     tag_redraw_areas("VIEW_3D")
-                elif event.type == "S" and self.mode != "MERGE/SPLIT":
+                elif event.type == "M" and self.mode != "MERGE/SPLIT":
                     self.mode = "MERGE/SPLIT"
                     self.addedBricks = []
                     tag_redraw_areas("VIEW_3D")
-                elif event.type == "M" and self.mode != "PAINT":
+                elif event.type == "P" and self.mode != "PAINT":
                     self.mode = "PAINT"
                     tag_redraw_areas("VIEW_3D")
 
             # check if function key pressed
             if event.type in ("LEFT_CTRL", "RIGHT_CTRL") and event.value == "PRESS":
-                if self.layerSolod:
+                if self.layerSolod is not None:
                     self.ctrlClickTime = time.time()
                     self.possibleCtrlDisable = True
                     return {"RUNNING_MODAL"}
                 else:
-                    self.layerSolod = True
+                    self.layerSolod = -1
             # if mouse moves, don't disable solo layer
             if event.type == "MOUSEMOVE":
                 self.possibleCtrlDisable = False
             # clear solo layer if escape/quick ctrl pressed
-            if (self.layerSolod and
+            if (self.layerSolod is not None and
                 ((event.type == "ESC" and event.value == "PRESS") or
                  (event.type in ("LEFT_CTRL", "RIGHT_CTRL") and event.value == "RELEASE" and (time.time() - self.ctrlClickTime < 0.2)))):
                 self.unSoloLayer()
-                self.layerSolod = False
+                self.layerSolod = None
                 self.possibleCtrlDisable = False
                 return {"RUNNING_MODAL"}
 
@@ -128,7 +128,7 @@ class paintbrushFramework:
                         curKey = getDictKey(self.obj.name)
                         curLoc = getDictLoc(self.bricksDict, curKey)
                         objSize = self.bricksDict[curKey]["size"]
-                        self.soloLayer(cm, curKey, curLoc, objSize)
+                        self.layerSolod = self.soloLayer(cm, curKey, curLoc, objSize)
                 elif self.obj is None:
                     bpy.context.window.cursor_set("DEFAULT")
                     return {"RUNNING_MODAL"}
@@ -179,7 +179,7 @@ class paintbrushFramework:
         except:
             bpy.context.window.cursor_set("DEFAULT")
             self.cancel(context)
-            handle_exception()
+            bricker_handle_exception()
             return {"CANCELLED"}
 
     ###################################################
