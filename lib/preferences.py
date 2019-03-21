@@ -23,28 +23,28 @@ from bpy.props import *
 # updater import
 from .. import addon_updater_ops
 
-class BrickerPreferences(AddonPreferences):
+class BRICKSCULPT_AP_preferences(AddonPreferences):
     bl_idname = __package__[:__package__.index(".lib")]
 
 	# addon updater preferences
-    auto_check_update = bpy.props.BoolProperty(
+    auto_check_update = BoolProperty(
         name="Auto-check for Update",
         description="If enabled, auto-check for updates using an interval",
         default=False)
-    updater_intrval_months = bpy.props.IntProperty(
+    updater_intrval_months = IntProperty(
         name='Months',
         description="Number of months between checking for updates",
         default=0, min=0)
-    updater_intrval_days = bpy.props.IntProperty(
+    updater_intrval_days = IntProperty(
         name='Days',
         description="Number of days between checking for updates",
         default=7, min=0)
-    updater_intrval_hours = bpy.props.IntProperty(
+    updater_intrval_hours = IntProperty(
         name='Hours',
         description="Number of hours between checking for updates",
         min=0, max=23,
         default=0)
-    updater_intrval_minutes = bpy.props.IntProperty(
+    updater_intrval_minutes = IntProperty(
         name='Minutes',
         description="Number of minutes between checking for updates",
         min=0, max=59,
@@ -53,9 +53,6 @@ class BrickerPreferences(AddonPreferences):
     def draw(self, context):
         layout = self.layout
         col = layout.column(align=True)
-
-        # draw addon prefs
-        prefs = bpy.props.bricker_preferences
 
         # updater draw function
         addon_updater_ops.update_settings_ui(self,context)

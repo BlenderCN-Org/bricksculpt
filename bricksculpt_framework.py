@@ -197,6 +197,9 @@ class bricksculpt_framework:
         scn = context.scene
         self.region = context.region
         self.r3d = context.space_data.region_3d
+        if bpy.app.version >= (2,80,0):
+            # TODO: Use custom view layer with only current model instead?
+            view_layer = bpy.context.window.view_layer
         rv3d = context.region_data
         if rv3d is None:
             return None
@@ -206,7 +209,10 @@ class bricksculpt_framework:
         ray_origin = region_2d_to_origin_3d(self.region, rv3d, coord)
         ray_target = ray_origin + (view_vector * ray_max)
 
-        result, loc, normal, idx, obj, mx = scn.ray_cast(ray_origin, ray_target)
+        if bpy.app.version >= (2,80,0):
+            result, loc, normal, idx, obj, mx = scn.ray_cast(view_layer, ray_origin, ray_target)
+        else:
+            result, loc, normal, idx, obj, mx = scn.ray_cast(ray_origin, ray_target)
 
         if result and obj.name.startswith('Bricker_' + source_name):
             self.obj = obj
@@ -216,10 +222,10 @@ class bricksculpt_framework:
             self.obj = None
             self.loc = None
             self.normal = None
-            context.area.header_text_set()
+            context.area.header_text_set(text=None)
 
     def cancel(self, context):
-        context.area.header_text_set()
+        context.area.header_text_set(text=None)
         bpy.props.running_bricksculpt_tool = False
         self.ui_end()
 

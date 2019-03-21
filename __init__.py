@@ -19,7 +19,7 @@ bl_info = {
     "name"        : "BrickSculpt (Bricker Addon)",
     "author"      : "Christopher Gearhart <chris@bblanimation.com>",
     "version"     : (1, 0, 0),
-    "blender"     : (2, 79, 0),
+    "blender"     : (2, 80, 0),
     "description" : "Brick Sculpting Tools for Bricker",
     "location"    : "View3D > Tools > Bricker > Customize Model",
     "warning"     : "",  # used for warning icon and text in addons panel
@@ -35,34 +35,30 @@ import bpy
 from bpy.props import *
 
 # Addon imports
-# from .ui import *
-
-# updater import
 from . import addon_updater_ops
+from .lib.preferences import *
+
+classes = [
+    BRICKSCULPT_PT_preferences,
+]
 
 
 def register():
-    bpy.utils.register_module(__name__)
-
-    bpy.props.bricksculpt_module_name = __name__
-    bpy.props.bricksculpt_version = str(bl_info["version"])[1:-1].replace(", ", ".")
-    bpy.props.bricksculpt_preferences = bpy.context.user_preferences.addons[__package__].preferences
+    # register classes
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
     # addon updater code and configurations
     addon_updater_ops.register(bl_info)
 
 
 def unregister():
-    Scn = bpy.types.Scene
-
     # addon updater unregister
     addon_updater_ops.unregister()
 
-    del bpy.props.bricksculpt_preferences
-    del bpy.props.bricksculpt_version
-    del bpy.props.bricksculpt_module_name
-
-    bpy.utils.unregister_module(__name__)
+    # unregister classes
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
 
 
 if __name__ == "__main__":
