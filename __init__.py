@@ -39,7 +39,7 @@ from . import addon_updater_ops
 from .lib.preferences import *
 
 classes = [
-    BRICKSCULPT_PT_preferences,
+    BRICKSCULPT_AP_preferences,
 ]
 
 
@@ -48,6 +48,9 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
+    bpy.props.bricksculpt_module_name = __name__
+    bpy.props.bricksculpt_version = str(bl_info["version"])[1:-1].replace(", ", ".")
+
     # addon updater code and configurations
     addon_updater_ops.register(bl_info)
 
@@ -55,6 +58,9 @@ def register():
 def unregister():
     # addon updater unregister
     addon_updater_ops.unregister()
+
+    del bpy.props.bricksculpt_module_name
+    del bpy.props.bricksculpt_version
 
     # unregister classes
     for cls in reversed(classes):
