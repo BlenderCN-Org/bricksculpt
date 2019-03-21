@@ -463,3 +463,21 @@ def bpy_collections():
 @blender_version_wrapper('>=','2.80')
 def bpy_collections():
     return bpy.data.collections
+
+
+@blender_version_wrapper('<=','2.79')
+def make_annotations(cls):
+    """Does nothing in Blender 2.79"""
+    return cls
+@blender_version_wrapper('>=','2.80')
+def make_annotations(cls):
+    """Converts class fields to annotations in Blender 2.8"""
+    bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
+    if bl_props:
+        if '__annotations__' not in cls.__dict__:
+            setattr(cls, '__annotations__', {})
+        annotations = cls.__dict__['__annotations__']
+        for k, v in bl_props.items():
+            annotations[k] = v
+            delattr(cls, k)
+    return cls

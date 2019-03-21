@@ -46,6 +46,7 @@ classes = [
 def register():
     # register classes
     for cls in classes:
+        make_annotations(cls)
         bpy.utils.register_class(cls)
 
     bpy.props.bricksculpt_module_name = __name__
