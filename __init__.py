@@ -37,6 +37,7 @@ from bpy.props import *
 # Addon imports
 from . import addon_updater_ops
 from .lib.preferences import *
+from .functions.common import *
 
 classes = [
     BRICKSCULPT_AP_preferences,
